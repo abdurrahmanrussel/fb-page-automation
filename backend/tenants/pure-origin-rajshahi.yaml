@@ -1,0 +1,102 @@
+slug: pure-origin-rajshahi
+name: Pure Origin Rajshahi
+page_id_env: PURE_ORIGIN_PAGE_ID
+page_access_token_env: PURE_ORIGIN_PAGE_ACCESS_TOKEN
+app_id_env: PURE_ORIGIN_APP_ID
+app_secret_env: PURE_ORIGIN_APP_SECRET
+verify_token_env: PURE_ORIGIN_VERIFY_TOKEN
+google_script_url_env: PURE_ORIGIN_GOOGLE_SCRIPT_URL
+
+contact_number: "01931-112866"
+email: abdurrahmanrussel77@gmail.com
+location: "তালাইমারি, মতিহার, রাজশাহী ৬০০০"
+website: https://pure-origin-rajshahi.vercel.app
+payment: "01931-112866 — bKash/Nagad/Rocket (send money only)"
+
+# Daily auto-post schedule (Bangladesh time, UTC+6) — every 30 min, 10:00–23:00
+auto_posts:
+  - "10:00"
+  - "10:30"
+  - "11:00"
+  - "11:30"
+  - "12:00"
+  - "12:30"
+  - "13:00"
+  - "13:30"
+  - "14:00"
+  - "14:30"
+  - "15:00"
+  - "15:30"
+  - "16:00"
+  - "16:30"
+  - "17:00"
+  - "17:30"
+  - "18:00"
+  - "18:30"
+  - "19:00"
+  - "19:30"
+  - "20:00"
+  - "20:30"
+  - "21:00"
+  - "21:30"
+  - "22:00"
+  - "22:30"
+  - "23:00"
+
+ai:
+  model: llama-3.3-70b-versatile
+  comment_max_tokens: 100
+  inbox_max_tokens: 500
+  temperature: 0.7
+
+# Raw canned response served when a list/pricing keyword is detected (pre-season msg)
+list_response: |
+  🥭 এখনও আম পাকেনি — কয়েকদিন অপেক্ষা করুন।
+  প্রি-অর্ডার শুরু হলে আপনাকে জানানো হবে, ইনশাআল্লাহ।
+  বিস্তারিত জানতে কল করুন: 01931-112866 📞
+
+list_keywords:
+  - তালিকা
+  - list
+  - price
+  - দাম
+  - কত
+  - কি কি
+  - কী কী
+  - কোন কোন
+  - সব আম
+  - আমের দাম
+  - variety
+  - জাত
+
+base_prompt: |
+  তুমি Pure Origin Rajshahi-এর কাস্টমার সার্ভিস। রাজশাহীর সেরা আম ও দেশীয় পণ্য বিক্রি করি — সরাসরি বাগান থেকে।
+
+  যোগাযোগ: 01931-112866 (WhatsApp/কল)
+  লোকেশন: তালাইমারি, মতিহার, রাজশাহী ৬০০০
+  ওয়েবসাইট: https://pure-origin-rajshahi.vercel.app
+
+  ⚠️ গুরুত্বপূর্ণ: এখন প্রি-সিজন চলছে। আম এখনও পাকেনি।
+  কেউ দাম বা অর্ডার জিজ্ঞেস করলে বলো:
+  "এখনও আম পাকেনি — কয়েকদিন অপেক্ষা করুন। প্রি-অর্ডার শুরু হলে জানানো হবে। বিস্তারিত: 01931-112866"
+
+  নিয়ম:
+  - সবসময় বাংলায় উত্তর দাও।
+  - উত্তর সংক্ষিপ্ত রাখো (২-৩ লাইন)।
+  - দাম বা স্টক নিজে থেকে বানিও না।
+  - সমস্যা বা জোরাজুরি হলে বলো: "সরাসরি কল করুন: 01931-112866"
+  - AI বা বট পরিচয় দেবে না। কোনো markdown ব্যবহার করবে না।
+
+comment_prompt: |
+  তুমি Pure Origin Rajshahi-এর কাস্টমার সার্ভিস। রাজশাহীর বাগান থেকে সরাসরি আম বিক্রি করি।
+  ⚠️ এখন প্রি-সিজন — আম এখনও পাকেনি।
+  নিয়ম:
+  - কমেন্টের উত্তর ১-২ লাইনে দাও, বন্ধুত্বপূর্ণভাবে।
+  - দাম বা স্টক জিজ্ঞেস করলে বলো: আম এখনও পাকেনি, কয়েকদিন অপেক্ষা করুন, প্রি-অর্ডার শুরু হলে জানানো হবে।
+  - সবসময় বাংলায় উত্তর দাও।
+  - AI বা বট পরিচয় দেবে না। কোনো markdown ব্যবহার করবে না।
+
+comment_suffix: "\n\n📩 বিস্তারিত জানতে ইনবক্সে মেসেজ করুন।"
+comment_fallback: "ধন্যবাদ! 🥭 বিস্তারিত জানতে ইনবক্সে মেসেজ করুন।"
+inbox_fallback: "আপনার বার্তার জন্য ধন্যবাদ! 🥭 আমরা শীঘ্রই উত্তর দেব। যোগাযোগ: 01931-112866"
+voice_message_reply: "ভয়েস মেসেজ পড়তে পারি না। দয়া করে টেক্সটে লিখুন। 🙏"
