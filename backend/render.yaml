@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: fb-automation-multi-tenant
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --timeout 120
+    plan: free
+    envVars:
+      # ── Shared Groq AI keys ──
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_API_KEY2
+        sync: false
+      - key: GROQ_API_KEY3
+        sync: false
+      - key: GROQ_API_KEY4
+        sync: false
+      - key: GROQ_API_KEY5
+        sync: false
+      # ── Tenant: AR TechLabs ──
+      - key: AR_TECHLABS_APP_ID
+        sync: false
+      - key: AR_TECHLABS_APP_SECRET
+        sync: false
+      - key: AR_TECHLABS_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: AR_TECHLABS_PAGE_ID
+        sync: false
+      - key: AR_TECHLABS_VERIFY_TOKEN
+        sync: false
+      - key: AR_TECHLABS_GOOGLE_SCRIPT_URL
+        sync: false
+      # ── Tenant: Pure Origin Rajshahi ──
+      - key: PURE_ORIGIN_APP_ID
+        sync: false
+      - key: PURE_ORIGIN_APP_SECRET
+        sync: false
+      - key: PURE_ORIGIN_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: PURE_ORIGIN_PAGE_ID
+        sync: false
+      - key: PURE_ORIGIN_VERIFY_TOKEN
+        sync: false
+      - key: PURE_ORIGIN_GOOGLE_SCRIPT_URL
+        sync: false

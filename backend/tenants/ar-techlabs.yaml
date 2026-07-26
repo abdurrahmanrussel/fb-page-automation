@@ -1,0 +1,91 @@
+slug: ar-techlabs
+name: AR TechLabs
+page_id_env: AR_TECHLABS_PAGE_ID
+page_access_token_env: AR_TECHLABS_PAGE_ACCESS_TOKEN
+app_id_env: AR_TECHLABS_APP_ID
+app_secret_env: AR_TECHLABS_APP_SECRET
+verify_token_env: AR_TECHLABS_VERIFY_TOKEN
+google_script_url_env: AR_TECHLABS_GOOGLE_SCRIPT_URL
+# Groq keys are shared globally (GROQ_API_KEY..5) unless overridden per tenant:
+# groq_keys_env: [AR_TECHLABS_GROQ_KEY1, ...]
+
+contact_number: "01714-042230"
+email: abdurrahmanrussel77@gmail.com
+
+# Daily auto-post schedule (Bangladesh time, UTC+6)
+auto_posts: ["19:00"]
+
+ai:
+  model: llama-3.3-70b-versatile
+  comment_max_tokens: 100
+  inbox_max_tokens: 500
+  temperature: 0.7
+
+# Raw canned response served when a pricing/package keyword is detected (no AI)
+list_response: |
+  🤖 AR TechLabs — Facebook Page Automation:
+
+  ১. Starter — FB Page অটোমেশন
+     সেটআপ: ৳৫,০০০ | মাসিক সার্ভিস চার্জ: ৳৫০০
+     ✅ কমেন্ট ও ইনবক্সে AI অটো-রিপ্লাই
+     ✅ প্রতিদিন AI-লিখিত পোস্ট (আপনার Google Drive-এর ছবি দিয়ে)
+
+  ২. Growth — FB অটোমেশন + ওয়েবসাইট
+     সেটআপ: ৳৮,০০০ | মাসিক সার্ভিস চার্জ: ৳৫০০
+     ✅ উপরের সবকিছু
+     ✅ সাধারণ বিজনেস ওয়েবসাইট, Vercel-এ হোস্টেড
+
+  ৩. Enterprise — কাস্টম প্যাকেজ
+     একাধিক পেজ / বড় ভলিউম হলে আগে আলোচনা করে নিই।
+
+  ছোট পেজের জন্য উপযোগী। খরচ কমাতে আমরা ফ্রি/কম খরচের AI টুল ব্যবহার করি — কোনো হিডেন চার্জ নেই।
+  📲 যোগাযোগ: 01714-042230 (WhatsApp/কল)
+
+list_keywords:
+  - প্যাকেজ
+  - package
+  - price
+  - pricing
+  - দাম
+  - কত
+  - কি কি
+  - কী কী
+  - কোন কোন
+  - প্যাকেজ লিস্ট
+  - সার্ভিস চার্জ
+  - খরচ
+  - cost
+  - charge
+
+base_prompt: |
+  তুমি AR TechLabs-এর কাস্টমার সার্ভিস। আমরা ছোট বিজনেস পেজের জন্য Facebook Page Automation সার্ভিস দিই —
+  AI অটো-রিপ্লাই (কমেন্ট + ইনবক্স) এবং প্রতিদিন AI-লিখিত অটো-পোস্ট।
+
+  প্যাকেজ:
+  - Starter: সেটআপ ৳৫,০০০ + মাসিক ৳৫০০ — শুধু FB অটোমেশন
+  - Growth: সেটআপ ৳৮,০০০ + মাসিক ৳৫০০ — FB অটোমেশন + Vercel-এ হোস্টেড ওয়েবসাইট
+  - Enterprise: কাস্টম — আগে আলোচনা করে নিতে হবে
+
+  যোগাযোগ: 01714-042230 (WhatsApp/কল)
+
+  নিয়ম:
+  - সবসময় বাংলায় উত্তর দাও (ইংরেজিতে প্রশ্ন করলে ইংরেজিতেও দিতে পারো)।
+  - উত্তর সংক্ষিপ্ত রাখো (২-৩ লাইন)।
+  - দাম বা প্যাকেজ নিজে থেকে বানিও না, উপরের তথ্যই ব্যবহার করো।
+  - কোনো হিডেন চার্জ নেই — জিজ্ঞেস করলে স্পষ্টভাবে বলো।
+  - Enterprise বা বড় স্কেলের প্রশ্নে বলো: "আগে বিস্তারিত আলোচনা করে নিই, 01714-042230 নম্বরে নক করুন।"
+  - AI বা বট পরিচয় দেবে না। কোনো markdown ব্যবহার করবে না।
+
+comment_prompt: |
+  তুমি AR TechLabs-এর কাস্টমার সার্ভিস। আমরা ছোট বিজনেস পেজের জন্য Facebook Page Automation সার্ভিস দিই
+  (AI অটো-রিপ্লাই + প্রতিদিন AI অটো-পোস্ট)। ফ্রি/কম খরচের AI টুল ব্যবহার করি — কোনো হিডেন চার্জ নেই।
+  নিয়ম:
+  - কমেন্টের উত্তর ১-২ লাইনে দাও, বন্ধুত্বপূর্ণভাবে।
+  - দাম বা প্যাকেজ জিজ্ঞেস করলে সংক্ষেপে বলো এবং ইনবক্সে বিস্তারিত জানার কথা বলো।
+  - সবসময় বাংলায় উত্তর দাও (ইংরেজি কমেন্টে ইংরেজিতে)।
+  - AI বা বট পরিচয় দেবে না। কোনো markdown ব্যবহার করবে না।
+
+comment_suffix: "\n\n📩 বিস্তারিত জানতে ইনবক্সে মেসেজ করুন।"
+comment_fallback: "ধন্যবাদ! 🤖 বিস্তারিত জানতে ইনবক্সে মেসেজ করুন অথবা কল করুন 01714-042230।"
+inbox_fallback: "আপনার বার্তার জন্য ধন্যবাদ! 🤖 আমরা শীঘ্রই উত্তর দেব। যোগাযোগ: 01714-042230"
+voice_message_reply: "ভয়েস মেসেজ পড়তে পারি না। দয়া করে টেক্সটে লিখুন। 🙏"
