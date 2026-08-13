@@ -111,3 +111,17 @@ class TenantAI:
         except Exception as e:
             logger.error("[%s] Groq inbox reply failed: %s", self.tenant.slug, e)
             return self.tenant.inbox_fallback
+
+    def generate_post_from_topic(self, topic: str) -> str:
+        try:
+            return self._chat(
+                messages=[
+                    {"role": "system", "content": self.tenant.post_prompt},
+                    {"role": "user", "content": f"বিষয়: {topic}"},
+                ],
+                max_tokens=400,
+                temperature=0.8,
+            )
+        except Exception as e:
+            logger.error("[%s] Groq post generation failed: %s", self.tenant.slug, e)
+            return ""

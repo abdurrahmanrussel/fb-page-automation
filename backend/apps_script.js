@@ -81,14 +81,32 @@ function popNextPost() {
 }
 
 function getRandomImage() {
-  var folder = DriveApp.getFolderById(FOLDER_ID);
-  var files = folder.getFiles();
-  var fileIds = [];
-  while (files.hasNext()) {
-    fileIds.push(files.next().getId());
-  }
-  if (fileIds.length === 0) return null;
+  if (!FOLDER_ID) return null;
+  try {
+    var root = DriveApp.getFolderById(FOLDER_ID);
 
-  var fileId = fileIds[Math.floor(Math.random() * fileIds.length)];
-  return 'https://drive.google.com/file/d/' + fileId + '/view';
+    // If there are subfolders (e.g. one per topic), pick a random subfolder
+    // first, then a random image inside it. Falls back to flat files in the
+    // root folder when there are no subfolders.
+    var subfolders = [];
+    var folderIter = root.getFolders();
+    while (folderIter.hasNext()) {
+      subfolders.push(folderIter.next());
+    }
+    var sourceFolder = subfolders.length > 0
+      ? subfolders[Math.floor(Math.random() * subfolders.length)]
+      : root;
+
+    var files = sourceFolder.getFiles();
+    var fileIds = [];
+    while (files.hasNext()) {
+      fileIds.push(files.next().getId());
+    }
+    if (fileIds.length === 0) return null;
+
+    var fileId = fileIds[Math.floor(Math.random() * fileIds.length)];
+    return 'https://drive.google.com/file/d/' + fileId + '/view';
+  } catch (e) {
+    return null; // bad/missing folder — post text-only instead of failing
+  }
 }

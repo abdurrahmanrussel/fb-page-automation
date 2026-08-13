@@ -280,6 +280,45 @@ class TenantBot:
             self._log("error", "Sheet fetch failed: %s", e)
             return None, None
 
+    def _get_next_ai_post(self):
+        """Fetch a random Drive topic+image, then AI-generate the caption from the topic name."""
+        if not self.t.google_script_url:
+            self._log("error", "GOOGLE_SCRIPT_URL env var not set for tenant.")
+            return None, None
+        try:
+            resp = requests.get(self.t.google_script_url, timeout=20)
+            resp.raise_for_status()
+            data = resp.json()
+            topic = data.get("topic") or None
+            image = _fix_image_url(data.get("image") or "")
+            if not topic:
+                self._log("info", "No topic/image available from Drive — skipping.")
+                return None, None
+            caption = self.ai.generate_post_from_topic(topic)
+            if not caption:
+                self._log("error", "AI returned empty caption for topic '%s'", topic)
+                return None, None
+            self._log("info", "Generated post for topic '%s': %.60s...", topic, caption)
+            return caption, image
+        except Exception as e:
+            self._log("error", "Drive topic fetch failed: %s", e)
+            return None, None
+
+    def _get_topic_post(self, post_time: str):
+        """AI-generate a caption for the fixed topic paired with this time slot. No script/queue needed."""
+        try:
+            idx = self.t.auto_posts.index(post_time)
+            topic = self.t.post_topics[idx]
+        except (ValueError, IndexError):
+            self._log("error", "No topic configured for slot %s", post_time)
+            return None, None
+        caption = self.ai.generate_post_from_topic(topic)
+        if not caption:
+            self._log("error", "AI returned empty caption for topic '%s'", topic)
+            return None, None
+        self._log("info", "Generated post for topic '%s': %.60s...", topic, caption)
+        return caption, None
+
     def check_scheduled_post(self):
         now = datetime.now(timezone.utc) + BD_TZ
         today = now.date()
@@ -301,12 +340,17 @@ class TenantBot:
                 continue
             self._posted_today.add(post_time)
 
-            post_text, image_url = self._get_next_post()
+            if self.t.post_prompt and self.t.post_topics:
+                post_text, image_url = self._get_topic_post(post_time)
+            elif self.t.post_prompt:
+                post_text, image_url = self._get_next_ai_post()
+            else:
+                post_text, image_url = self._get_next_post()
             if not post_text:
-                self._log("info", "No post in sheet for %s — skipping.", post_time)
+                self._log("info", "No post available for %s — skipping.", post_time)
                 continue
             self._post_to_page(post_text, image_url)
-            self._log("info", "Sheet auto-post done at %s.", post_time)
+            self._log("info", "Auto-post done at %s.", post_time)
 
     # ── Main loop ──────────────────────────────────────────────────────────────
 

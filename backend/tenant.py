@@ -60,6 +60,9 @@ class Tenant:
 
     # Schedule
     auto_posts: list = field(default_factory=list)
+    # If set, must be same length as auto_posts — pairs each slot with a fixed
+    # topic; the AI generates the caption at post time, no queue/script needed.
+    post_topics: list = field(default_factory=list)
 
     # AI settings
     model: str = "llama-3.3-70b-versatile"
@@ -73,6 +76,7 @@ class Tenant:
     list_keywords: list = field(default_factory=list)
     base_prompt: str = ""
     comment_prompt: str = ""
+    post_prompt: str = ""
     comment_suffix: str = ""
     comment_fallback: str = ""
     inbox_fallback: str = ""
@@ -114,6 +118,7 @@ class Tenant:
             website=data.get("website", ""),
             payment=data.get("payment", ""),
             auto_posts=list(data.get("auto_posts", [])),
+            post_topics=list(data.get("post_topics", [])),
             model=ai.get("model", "llama-3.3-70b-versatile"),
             comment_max_tokens=int(ai.get("comment_max_tokens", 100)),
             inbox_max_tokens=int(ai.get("inbox_max_tokens", 500)),
@@ -123,6 +128,7 @@ class Tenant:
             list_keywords=list(data.get("list_keywords", [])),
             base_prompt=data.get("base_prompt", ""),
             comment_prompt=data.get("comment_prompt", ""),
+            post_prompt=data.get("post_prompt", ""),
             comment_suffix=data.get("comment_suffix", ""),
             comment_fallback=data.get("comment_fallback", ""),
             inbox_fallback=data.get("inbox_fallback", ""),
