@@ -57,3 +57,14 @@ services:
         sync: false
       - key: PRIMESEEDBD_GOOGLE_SCRIPT_URL
         sync: false
+      # ── Tenant: মা ও শিশুর যত্ন a to z ──
+      - key: MOTHER_BABY_APP_ID
+        sync: false
+      - key: MOTHER_BABY_APP_SECRET
+        sync: false
+      - key: MOTHER_BABY_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: MOTHER_BABY_PAGE_ID
+        sync: false
+      - key: MOTHER_BABY_VERIFY_TOKEN
+        sync: false
