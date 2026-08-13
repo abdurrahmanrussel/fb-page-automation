@@ -1,0 +1,71 @@
+slug: primeseedbd
+name: Prime Seed BD
+page_id_env: PRIMESEEDBD_PAGE_ID
+page_access_token_env: PRIMESEEDBD_PAGE_ACCESS_TOKEN
+app_id_env: PRIMESEEDBD_APP_ID
+app_secret_env: PRIMESEEDBD_APP_SECRET
+verify_token_env: PRIMESEEDBD_VERIFY_TOKEN
+google_script_url_env: PRIMESEEDBD_GOOGLE_SCRIPT_URL
+
+# TODO: replace with real contact number
+contact_number: "01XXX-XXXXXX"
+email: abdurrahmanrussel777@gmail.com
+# TODO: replace with real location
+location: "TODO: shop/warehouse address"
+website: https://primeseedbd.com
+# TODO: replace with real payment number (bKash/Nagad/Rocket)
+payment: "01XXX-XXXXXX — bKash/Nagad/Rocket (send money only)"
+
+# Daily auto-post schedule (Bangladesh time, UTC+6) — 1 post/day
+auto_posts:
+  - "19:00"
+
+ai:
+  model: llama-3.3-70b-versatile
+  comment_max_tokens: 100
+  inbox_max_tokens: 500
+  temperature: 0.7
+
+# TODO: raw canned response served when a list/pricing keyword is detected
+list_response: |
+  🌱 আমাদের বীজের তালিকা ও দাম জানতে যোগাযোগ করুন।
+  বিস্তারিত জানতে কল করুন: 01XXX-XXXXXX 📞
+
+list_keywords:
+  - তালিকা
+  - list
+  - price
+  - দাম
+  - কত
+  - কি কি
+  - কী কী
+  - কোন কোন
+  - বীজ
+  - variety
+  - জাত
+
+base_prompt: |
+  তুমি Prime Seed BD-এর কাস্টমার সার্ভিস। আমরা মানসম্মত বীজ বিক্রি করি।
+
+  যোগাযোগ: 01XXX-XXXXXX (WhatsApp/কল)
+  ওয়েবসাইট: https://primeseedbd.com
+
+  নিয়ম:
+  - সবসময় বাংলায় উত্তর দাও।
+  - উত্তর সংক্ষিপ্ত রাখো (২-৩ লাইন)।
+  - দাম বা স্টক নিজে থেকে বানিও না।
+  - সমস্যা বা জোরাজুরি হলে বলো: "সরাসরি কল করুন: 01XXX-XXXXXX"
+  - AI বা বট পরিচয় দেবে না। কোনো markdown ব্যবহার করবে না।
+
+comment_prompt: |
+  তুমি Prime Seed BD-এর কাস্টমার সার্ভিস। মানসম্মত বীজ বিক্রি করি।
+  নিয়ম:
+  - কমেন্টের উত্তর ১-২ লাইনে দাও, বন্ধুত্বপূর্ণভাবে।
+  - দাম বা স্টক জিজ্ঞেস করলে ইনবক্সে যোগাযোগ করতে বলো।
+  - সবসময় বাংলায় উত্তর দাও।
+  - AI বা বট পরিচয় দেবে না। কোনো markdown ব্যবহার করবে না।
+
+comment_suffix: "\n\n📩 বিস্তারিত জানতে ইনবক্সে মেসেজ করুন।"
+comment_fallback: "ধন্যবাদ! 🌱 বিস্তারিত জানতে ইনবক্সে মেসেজ করুন।"
+inbox_fallback: "আপনার বার্তার জন্য ধন্যবাদ! 🌱 আমরা শীঘ্রই উত্তর দেব। যোগাযোগ: 01XXX-XXXXXX"
+voice_message_reply: "ভয়েস মেসেজ পড়তে পারি না। দয়া করে টেক্সটে লিখুন। 🙏"

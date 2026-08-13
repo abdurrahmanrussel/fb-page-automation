@@ -56,7 +56,7 @@ def upload(tenant, post_text: str) -> bool:
     resp = requests.get(
         tenant.google_script_url,
         params={"action": "add", "post": post_text},
-        timeout=20,
+        timeout=45,
     )
     try:
         data = resp.json()
@@ -73,7 +73,7 @@ def list_posts(tenant) -> None:
     if not tenant.google_script_url:
         print(f"ERROR: GOOGLE_SCRIPT_URL not set for tenant '{tenant.slug}'")
         return
-    resp = requests.get(tenant.google_script_url, params={"action": "list"}, timeout=20)
+    resp = requests.get(tenant.google_script_url, params={"action": "list"}, timeout=45)
     if not resp.ok:
         print(f"❌ {resp.status_code}: {resp.text}")
         return
@@ -97,7 +97,7 @@ def clear_queue(tenant) -> None:
     if confirm != "y":
         print("Cancelled.")
         return
-    resp = requests.get(tenant.google_script_url, params={"action": "clear"}, timeout=20)
+    resp = requests.get(tenant.google_script_url, params={"action": "clear"}, timeout=45)
     if resp.ok:
         print(f"✅ Cleared {resp.json().get('deleted', '?')} posts.")
     else:

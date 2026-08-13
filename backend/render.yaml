@@ -44,3 +44,16 @@ services:
         sync: false
       - key: PURE_ORIGIN_GOOGLE_SCRIPT_URL
         sync: false
+      # ── Tenant: Prime Seed BD ──
+      - key: PRIMESEEDBD_APP_ID
+        sync: false
+      - key: PRIMESEEDBD_APP_SECRET
+        sync: false
+      - key: PRIMESEEDBD_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: PRIMESEEDBD_PAGE_ID
+        sync: false
+      - key: PRIMESEEDBD_VERIFY_TOKEN
+        sync: false
+      - key: PRIMESEEDBD_GOOGLE_SCRIPT_URL
+        sync: false
