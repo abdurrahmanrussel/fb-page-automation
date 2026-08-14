@@ -8,15 +8,10 @@ verify_token_env: MOTHER_BABY_VERIFY_TOKEN
 
 email: abdurrahmanrussel77@gmail.com
 
-# Daily auto-post schedule (Bangladesh time, UTC+6) — AI-generated per fixed
-# topic below, no Sheet/script needed. post_topics[i] pairs with auto_posts[i].
+# Daily auto-post schedule (Bangladesh time, UTC+6) — AI-generated, 1/day.
+# Topic rotates daily through post_topics (day-of-year based), no repeats.
 auto_posts:
-  - "12:00"
-  - "12:10"
-  - "12:20"
-  - "12:30"
-  - "12:40"
-  - "12:50"
+  - "16:20"
 
 post_topics:
   - "শিশুর বুকের দুধ খাওয়ানোর উপকারিতা ও সঠিক নিয়ম"
