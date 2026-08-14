@@ -16,6 +16,7 @@ from datetime import datetime, timezone, timedelta
 import requests
 
 from ai_engine import TenantAI
+from pricing import format_pricing_context
 from tenant import Tenant
 
 logger = logging.getLogger(__name__)
@@ -241,7 +242,12 @@ class TenantBot:
             if m.get("message"):
                 history.append({"role": role, "content": m["message"]})
 
-        ai_reply = self.ai.generate_inbox_reply(user_text, history)
+        pricing_ctx = (
+            format_pricing_context(self.t.pricing_sheet_url)
+            if self.t.pricing_sheet_url
+            else ""
+        )
+        ai_reply = self.ai.generate_inbox_reply(user_text, history, pricing_ctx)
         self._send_message(sender_id, ai_reply)
 
     # ── Scheduled daily posts ──────────────────────────────────────────────────
