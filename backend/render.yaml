@@ -68,3 +68,14 @@ services:
         sync: false
       - key: MOTHER_BABY_VERIFY_TOKEN
         sync: false
+      # ── Tenant: Rahul Hasan Offer Point ──
+      - key: RAHULHASAN_APP_ID
+        sync: false
+      - key: RAHULHASAN_APP_SECRET
+        sync: false
+      - key: RAHULHASAN_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: RAHULHASAN_PAGE_ID
+        sync: false
+      - key: RAHULHASAN_VERIFY_TOKEN
+        sync: false
