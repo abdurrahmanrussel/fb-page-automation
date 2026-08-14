@@ -117,7 +117,12 @@ class TenantBot:
                 if reply:
                     post_text = post.get("message") or post.get("story") or ""
                     comment_text = comment.get("message", "")
-                    ai_reply = self.ai.generate_comment_reply(comment_text, post_text)
+                    pricing_ctx = (
+                        format_pricing_context(self.t.pricing_sheet_url)
+                        if self.t.pricing_sheet_url
+                        else ""
+                    )
+                    ai_reply = self.ai.generate_comment_reply(comment_text, post_text, pricing_ctx)
                     full_reply = ai_reply + self.t.comment_suffix
                     self._reply_to_comment(cid, full_reply)
 
