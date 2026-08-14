@@ -7,6 +7,9 @@ services:
     startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --timeout 120
     plan: free
     envVars:
+      # ── Shared Ollama Cloud key (tried first, Groq is the fallback) ──
+      - key: OLLAMA_API_KEY
+        sync: false
       # ── Shared Groq AI keys ──
       - key: GROQ_API_KEY
         sync: false
