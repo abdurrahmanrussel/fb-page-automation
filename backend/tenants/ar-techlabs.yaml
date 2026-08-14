@@ -17,7 +17,7 @@ auto_posts: ["16:10"]
 
 ai:
   model: llama-3.3-70b-versatile
-  comment_max_tokens: 100
+  comment_max_tokens: 200
   inbox_max_tokens: 500
   temperature: 0.7
 
