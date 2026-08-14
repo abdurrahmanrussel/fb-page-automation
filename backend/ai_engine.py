@@ -1,20 +1,57 @@
 """
-Per-tenant Groq AI reply generator.
-
-Groq clients are built once per tenant (using that tenant's keys, or the shared
-global keys). Each tenant keeps its own round-robin index + rate-limit cooldown
-state, so a spike on one page never blocks another.
+Per-tenant AI reply generator. Tries Ollama Cloud models in order (gpt-oss:120b
+-> gpt-oss:20b -> deepseek-v4-flash) — a single shared key, not per-tenant —
+and falls back to the existing per-tenant Groq round-robin only if all three
+fail. Groq behaviour is unchanged when Ollama isn't used.
 """
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
+
+import requests
 from groq import Groq
 
 logger = logging.getLogger(__name__)
 
 _COOLDOWN_SECS = 60
+
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "")
+OLLAMA_MODELS = ["gpt-oss:120b", "gpt-oss:20b", "deepseek-v4-flash:0731"]
+OLLAMA_URL = "https://ollama.com/v1/chat/completions"
+
+
+def _ollama_chat_one(model: str, messages: list, max_tokens: int, temperature: float) -> str:
+    resp = requests.post(
+        OLLAMA_URL,
+        headers={"Authorization": f"Bearer {OLLAMA_API_KEY}"},
+        json={
+            "model": model,
+            "reasoning_effort": "low",
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        },
+        timeout=20,
+    )
+    resp.raise_for_status()
+    content = resp.json()["choices"][0]["message"]["content"].strip()
+    if not content:
+        raise RuntimeError(f"Ollama ({model}) returned empty content")
+    return content
+
+
+def _ollama_chat(messages: list, max_tokens: int, temperature: float) -> str:
+    last_err = None
+    for model in OLLAMA_MODELS:
+        try:
+            return _ollama_chat_one(model, messages, max_tokens, temperature)
+        except Exception as e:
+            last_err = e
+            logger.warning("Ollama model %s failed (%s), trying next", model, e)
+    raise last_err
 
 
 class TenantAI:
@@ -40,6 +77,16 @@ class TenantAI:
         ]
 
     def _chat(self, messages: list, max_tokens: int, temperature: float) -> str:
+        if OLLAMA_API_KEY:
+            try:
+                return _ollama_chat(messages, max_tokens, temperature)
+            except Exception as e:
+                logger.warning(
+                    "[%s] Ollama failed (%s), falling back to Groq", self.tenant.slug, e
+                )
+        return self._chat_groq(messages, max_tokens, temperature)
+
+    def _chat_groq(self, messages: list, max_tokens: int, temperature: float) -> str:
         n = len(self._clients)
         if n == 0:
             raise RuntimeError("No Groq clients configured")
@@ -94,7 +141,7 @@ class TenantAI:
                 temperature=self.tenant.temperature,
             )
         except Exception as e:
-            logger.error("[%s] Groq comment reply failed: %s", self.tenant.slug, e)
+            logger.error("[%s] AI comment reply failed: %s", self.tenant.slug, e)
             return self.tenant.comment_fallback
 
     def generate_inbox_reply(self, user_message: str, history: list = None) -> str:
@@ -109,7 +156,7 @@ class TenantAI:
                 temperature=self.tenant.temperature,
             )
         except Exception as e:
-            logger.error("[%s] Groq inbox reply failed: %s", self.tenant.slug, e)
+            logger.error("[%s] AI inbox reply failed: %s", self.tenant.slug, e)
             return self.tenant.inbox_fallback
 
     def generate_post_from_topic(self, topic: str) -> str:
@@ -123,7 +170,7 @@ class TenantAI:
                 temperature=0.8,
             )
         except Exception as e:
-            logger.error("[%s] Groq post generation failed: %s", self.tenant.slug, e)
+            logger.error("[%s] AI post generation failed: %s", self.tenant.slug, e)
             return ""
 
     def generate_emotional_post(self, topic: str) -> str:
@@ -137,5 +184,5 @@ class TenantAI:
                 temperature=0.95,
             )
         except Exception as e:
-            logger.error("[%s] Groq emotional post failed: %s", self.tenant.slug, e)
+            logger.error("[%s] AI emotional post failed: %s", self.tenant.slug, e)
             return ""
