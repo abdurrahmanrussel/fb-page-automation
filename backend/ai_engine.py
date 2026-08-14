@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import threading
 import time
 
@@ -17,6 +18,17 @@ from groq import Groq
 logger = logging.getLogger(__name__)
 
 _COOLDOWN_SECS = 60
+
+
+def _strip_markdown(text: str) -> str:
+    """Models sometimes use **bold**/headers despite prompt instructions not
+    to — Facebook renders those as literal asterisks/hashes, so strip them
+    as a safety net regardless of how well the prompt is followed."""
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"__(.+?)__", r"\1", text)
+    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
+    text = text.replace("`", "")
+    return text
 
 OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "")
 OLLAMA_MODELS = ["gpt-oss:120b", "gpt-oss:20b", "deepseek-v4-flash:0731"]
@@ -79,12 +91,12 @@ class TenantAI:
     def _chat(self, messages: list, max_tokens: int, temperature: float) -> str:
         if OLLAMA_API_KEY:
             try:
-                return _ollama_chat(messages, max_tokens, temperature)
+                return _strip_markdown(_ollama_chat(messages, max_tokens, temperature))
             except Exception as e:
                 logger.warning(
                     "[%s] Ollama failed (%s), falling back to Groq", self.tenant.slug, e
                 )
-        return self._chat_groq(messages, max_tokens, temperature)
+        return _strip_markdown(self._chat_groq(messages, max_tokens, temperature))
 
     def _chat_groq(self, messages: list, max_tokens: int, temperature: float) -> str:
         n = len(self._clients)
@@ -129,12 +141,15 @@ class TenantAI:
 
     # ── Public reply generators ────────────────────────────────────────────────
 
-    def generate_comment_reply(self, comment_text: str, post_text: str = "") -> str:
+    def generate_comment_reply(self, comment_text: str, post_text: str = "", extra_context: str = "") -> str:
         context = f'পোস্ট: "{post_text[:150]}"\n' if post_text else ""
+        system = self.tenant.comment_prompt
+        if extra_context:
+            system = f"{system}\n\n{extra_context}"
         try:
             return self._chat(
                 messages=[
-                    {"role": "system", "content": self.tenant.comment_prompt},
+                    {"role": "system", "content": system},
                     {"role": "user", "content": f'{context}কমেন্ট: "{comment_text}"'},
                 ],
                 max_tokens=self.tenant.comment_max_tokens,
@@ -144,8 +159,11 @@ class TenantAI:
             logger.error("[%s] AI comment reply failed: %s", self.tenant.slug, e)
             return self.tenant.comment_fallback
 
-    def generate_inbox_reply(self, user_message: str, history: list = None) -> str:
-        messages = [{"role": "system", "content": self.tenant.base_prompt}]
+    def generate_inbox_reply(self, user_message: str, history: list = None, extra_context: str = "") -> str:
+        system = self.tenant.base_prompt
+        if extra_context:
+            system = f"{system}\n\n{extra_context}"
+        messages = [{"role": "system", "content": system}]
         if history:
             messages.extend(history[-4:])
         messages.append({"role": "user", "content": user_message})

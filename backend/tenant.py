@@ -50,6 +50,10 @@ class Tenant:
 
     # Google Sheets content queue
     google_script_url: str = ""
+    # Live operator pricing sheet (public CSV export, no auth) — injected as
+    # extra AI context per reply for reseller tenants. Not a secret, kept in
+    # the yaml directly rather than an env var.
+    pricing_sheet_url: str = ""
 
     # Business identity
     contact_number: str = ""
@@ -115,6 +119,7 @@ class Tenant:
             app_secret=_env(data.get("app_secret_env")),
             verify_token=_env(data.get("verify_token_env")),
             google_script_url=_env(data.get("google_script_url_env")),
+            pricing_sheet_url=data.get("pricing_sheet_url", ""),
             contact_number=data.get("contact_number", ""),
             email=data.get("email", ""),
             location=data.get("location", ""),
