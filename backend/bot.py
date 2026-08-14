@@ -22,7 +22,7 @@ from tenant import Tenant
 logger = logging.getLogger(__name__)
 
 GRAPH = "https://graph.facebook.com/v25.0"
-POLL_INTERVAL = 15  # seconds
+POLL_INTERVAL = 5  # seconds
 BD_TZ = timedelta(hours=6)  # Bangladesh = UTC+6
 
 
