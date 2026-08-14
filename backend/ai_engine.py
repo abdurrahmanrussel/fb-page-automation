@@ -125,3 +125,17 @@ class TenantAI:
         except Exception as e:
             logger.error("[%s] Groq post generation failed: %s", self.tenant.slug, e)
             return ""
+
+    def generate_emotional_post(self, topic: str) -> str:
+        try:
+            return self._chat(
+                messages=[
+                    {"role": "system", "content": self.tenant.emotional_prompt},
+                    {"role": "user", "content": f"আজকের গল্পের আবেগ/দৃষ্টিকোণ: {topic}"},
+                ],
+                max_tokens=400,
+                temperature=0.95,
+            )
+        except Exception as e:
+            logger.error("[%s] Groq emotional post failed: %s", self.tenant.slug, e)
+            return ""

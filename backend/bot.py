@@ -327,6 +327,31 @@ class TenantBot:
         self._log("info", "Generated post for topic '%s': %.60s...", topic, caption)
         return caption, None
 
+    def _get_planned_post(self, post_time: str):
+        """AI post from a fixed per-slot plan (operator hook+static list, or emotional). No script/queue needed."""
+        try:
+            idx = self.t.auto_posts.index(post_time)
+            plan = self.t.post_plan[idx]
+        except (ValueError, IndexError):
+            self._log("error", "No post_plan entry for slot %s", post_time)
+            return None, None
+        kind = plan.get("kind")
+        topic = plan.get("topic", "")
+        if kind == "emotional":
+            caption = self.ai.generate_emotional_post(topic)
+            if not caption:
+                self._log("error", "AI returned empty emotional post for slot %s", post_time)
+                return None, None
+            return caption, None
+        hook = self.ai.generate_post_from_topic(topic)
+        if not hook:
+            self._log("error", "AI returned empty hook for topic '%s'", topic)
+            return None, None
+        static = plan.get("static", "")
+        text = f"{hook}\n\n{static}" if static else hook
+        self._log("info", "Generated planned post (%s/%s): %.60s...", kind, topic, text)
+        return text, None
+
     def check_scheduled_post(self):
         now = datetime.now(timezone.utc) + BD_TZ
         today = now.date()
@@ -348,7 +373,9 @@ class TenantBot:
                 continue
             self._posted_today.add(post_time)
 
-            if self.t.post_prompt and self.t.post_topics:
+            if self.t.post_plan:
+                post_text, image_url = self._get_planned_post(post_time)
+            elif self.t.post_prompt and self.t.post_topics:
                 post_text, image_url = self._get_topic_post(post_time)
             elif self.t.post_prompt:
                 post_text, image_url = self._get_next_ai_post()
