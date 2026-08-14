@@ -23,7 +23,7 @@ post_topics:
 
 ai:
   model: llama-3.3-70b-versatile
-  comment_max_tokens: 120
+  comment_max_tokens: 200
   inbox_max_tokens: 500
   temperature: 0.7
 
