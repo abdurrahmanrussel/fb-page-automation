@@ -18,7 +18,7 @@ payment: "01XXX-XXXXXX — bKash/Nagad/Rocket (send money only)"
 
 # Daily auto-post schedule (Bangladesh time, UTC+6) — 1 post/day
 auto_posts:
-  - "19:00"
+  - "16:00"
 
 ai:
   model: llama-3.3-70b-versatile

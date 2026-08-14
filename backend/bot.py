@@ -305,13 +305,21 @@ class TenantBot:
             return None, None
 
     def _get_topic_post(self, post_time: str):
-        """AI-generate a caption for the fixed topic paired with this time slot. No script/queue needed."""
-        try:
-            idx = self.t.auto_posts.index(post_time)
-            topic = self.t.post_topics[idx]
-        except (ValueError, IndexError):
-            self._log("error", "No topic configured for slot %s", post_time)
+        """AI-generate a caption for a rotating topic. No script/queue needed.
+
+        Topic is chosen by day-of-year (+ slot position, for multi-slot
+        schedules) so it varies day to day instead of always picking the
+        same fixed topic when there are fewer slots than topics.
+        """
+        if not self.t.post_topics:
+            self._log("error", "No post_topics configured for slot %s", post_time)
             return None, None
+        try:
+            slot_idx = self.t.auto_posts.index(post_time)
+        except ValueError:
+            slot_idx = 0
+        day_of_year = datetime.now(timezone.utc).timetuple().tm_yday
+        topic = self.t.post_topics[(day_of_year + slot_idx) % len(self.t.post_topics)]
         caption = self.ai.generate_post_from_topic(topic)
         if not caption:
             self._log("error", "AI returned empty caption for topic '%s'", topic)

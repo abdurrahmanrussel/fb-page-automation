@@ -13,7 +13,7 @@ contact_number: "01714-042230"
 email: abdurrahmanrussel77@gmail.com
 
 # Daily auto-post schedule (Bangladesh time, UTC+6)
-auto_posts: ["19:00"]
+auto_posts: ["16:10"]
 
 ai:
   model: llama-3.3-70b-versatile
