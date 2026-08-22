@@ -25,6 +25,26 @@ GRAPH = "https://graph.facebook.com/v25.0"
 POLL_INTERVAL = 5  # seconds
 BD_TZ = timedelta(hours=6)  # Bangladesh = UTC+6
 
+_BN_DIGITS = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
+_BN_MONTHS = [
+    "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+    "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর",
+]
+_OPERATOR_LABELS = {
+    "grameenphone": "Grameenphone (GP)",
+    "banglalink": "Banglalink",
+    "robi": "Robi",
+    "airtel": "Airtel",
+    "ryze": "Ryze",
+}
+
+
+def _bangla_date(dt) -> str:
+    day = str(dt.day).translate(_BN_DIGITS)
+    month = _BN_MONTHS[dt.month - 1]
+    year = str(dt.year).translate(_BN_DIGITS)
+    return f"{day} {month}, {year}"
+
 
 def _fix_image_url(url: str) -> str:
     """Convert Google Drive share links to direct download URLs."""
@@ -381,11 +401,14 @@ class TenantBot:
             if not raw:
                 self._log("error", "No live pricing data for operator '%s' at slot %s", operator, post_time)
                 return None, None
-            caption = self.ai.generate_full_list_post(operator, raw)
-            if not caption:
+            body = self.ai.generate_full_list_post(operator, raw)
+            if not body:
                 self._log("error", "AI returned empty full-list post for %s at slot %s", operator, post_time)
                 return None, None
-            return caption, None
+            now_bd = datetime.now(timezone.utc) + BD_TZ
+            label = _OPERATOR_LABELS.get(operator, operator)
+            header = f"📅 {_bangla_date(now_bd)} — আজকের {label} সব অফার দেখুন একটা লিস্টে! 👇\n\n"
+            return header + body, None
         hook = self.ai.generate_post_from_topic(topic)
         if not hook:
             self._log("error", "AI returned empty hook for topic '%s'", topic)
