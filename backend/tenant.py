@@ -82,6 +82,9 @@ class Tenant:
     comment_prompt: str = ""
     post_prompt: str = ""
     emotional_prompt: str = ""
+    viral_prompt: str = ""
+    full_list_prompt: str = ""
+    story_prompt: str = ""
     # Parallel to auto_posts: [{kind: "operator", topic, static} | {kind: "emotional", topic}]
     post_plan: list = field(default_factory=list)
     comment_suffix: str = ""
@@ -138,6 +141,9 @@ class Tenant:
             comment_prompt=data.get("comment_prompt", ""),
             post_prompt=data.get("post_prompt", ""),
             emotional_prompt=data.get("emotional_prompt", ""),
+            viral_prompt=data.get("viral_prompt", ""),
+            full_list_prompt=data.get("full_list_prompt", ""),
+            story_prompt=data.get("story_prompt", ""),
             post_plan=list(data.get("post_plan", [])),
             comment_suffix=data.get("comment_suffix", ""),
             comment_fallback=data.get("comment_fallback", ""),
