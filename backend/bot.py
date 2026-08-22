@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 import requests
 
 from ai_engine import TenantAI
-from pricing import format_pricing_context
+from pricing import fetch_pricing, format_pricing_context
 from tenant import Tenant
 
 logger = logging.getLogger(__name__)
@@ -352,6 +352,38 @@ class TenantBot:
             caption = self.ai.generate_emotional_post(topic)
             if not caption:
                 self._log("error", "AI returned empty emotional post for slot %s", post_time)
+                return None, None
+            return caption, None
+        if kind == "story":
+            caption = self.ai.generate_story_post(topic)
+            if not caption:
+                self._log("error", "AI returned empty story post for slot %s", post_time)
+                return None, None
+            return caption, None
+        if kind == "viral":
+            caption = self.ai.generate_viral_post(topic)
+            if not caption:
+                self._log("error", "AI returned empty viral post for slot %s", post_time)
+                return None, None
+            return caption, None
+        if kind == "full_list":
+            operators = plan.get("operators") or ([plan["operator"]] if plan.get("operator") else [])
+            if not operators:
+                self._log("error", "full_list slot has no operator(s) configured for %s", post_time)
+                return None, None
+            day_of_year = datetime.now(timezone.utc).timetuple().tm_yday
+            operator = operators[day_of_year % len(operators)]
+            if not self.t.pricing_sheet_url:
+                self._log("error", "full_list slot but no pricing_sheet_url set for %s", post_time)
+                return None, None
+            data = fetch_pricing(self.t.pricing_sheet_url)
+            raw = data.get(operator, "")
+            if not raw:
+                self._log("error", "No live pricing data for operator '%s' at slot %s", operator, post_time)
+                return None, None
+            caption = self.ai.generate_full_list_post(operator, raw)
+            if not caption:
+                self._log("error", "AI returned empty full-list post for %s at slot %s", operator, post_time)
                 return None, None
             return caption, None
         hook = self.ai.generate_post_from_topic(topic)

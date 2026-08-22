@@ -12,6 +12,13 @@ For every tenant the bot:
 
 No webhooks needed — pure polling every 15 seconds per tenant.
 
+## External Resources (reference links)
+
+| What | Link | Used by |
+|---|---|---|
+| Live operator pricing sheet (Robi/Airtel/GP/Ryze/Banglalink, columns A-E) | https://docs.google.com/spreadsheets/d/1Hqpbyqov9lvq8WNAeHAXVjlc4aLMylkUwaAYXyXdoWI/edit?usp=sharing | `rahul-hasan-offer-point`, `banglalink-drive`, `sokol-sim-offer` (via `pricing_sheet_url` in each tenant yaml) |
+| মা ও শিশুর যত্ন Drive image folder (topic subfolders) | https://drive.google.com/drive/folders/1d1YvcrxvwO1tYEchTFGODu4L3qtbWrGe | Not currently wired into any tenant — `mother-baby` posts are text-only (topic rotation, no image). Kept here in case image posting gets added back later. |
+
 ## Architecture
 
 ```

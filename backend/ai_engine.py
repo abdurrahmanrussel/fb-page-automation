@@ -184,11 +184,53 @@ class TenantAI:
                     {"role": "system", "content": self.tenant.post_prompt},
                     {"role": "user", "content": f"বিষয়: {topic}"},
                 ],
-                max_tokens=400,
+                max_tokens=900,
                 temperature=0.8,
             )
         except Exception as e:
             logger.error("[%s] AI post generation failed: %s", self.tenant.slug, e)
+            return ""
+
+    def generate_viral_post(self, topic: str) -> str:
+        try:
+            return self._chat(
+                messages=[
+                    {"role": "system", "content": self.tenant.viral_prompt},
+                    {"role": "user", "content": f"আজকের হুক/অ্যাঙ্গেল: {topic}"},
+                ],
+                max_tokens=700,
+                temperature=0.85,
+            )
+        except Exception as e:
+            logger.error("[%s] AI viral post failed: %s", self.tenant.slug, e)
+            return ""
+
+    def generate_full_list_post(self, operator_label: str, raw_data: str) -> str:
+        try:
+            return self._chat(
+                messages=[
+                    {"role": "system", "content": self.tenant.full_list_prompt},
+                    {"role": "user", "content": f"অপারেটর: {operator_label}\n\nRAW DATA:\n{raw_data}"},
+                ],
+                max_tokens=3500,
+                temperature=0.6,
+            )
+        except Exception as e:
+            logger.error("[%s] AI full-list post failed: %s", self.tenant.slug, e)
+            return ""
+
+    def generate_story_post(self, topic: str) -> str:
+        try:
+            return self._chat(
+                messages=[
+                    {"role": "system", "content": self.tenant.story_prompt},
+                    {"role": "user", "content": f"আজকের গল্পের বিষয়/ইঙ্গিত: {topic}"},
+                ],
+                max_tokens=700,
+                temperature=0.9,
+            )
+        except Exception as e:
+            logger.error("[%s] AI story post failed: %s", self.tenant.slug, e)
             return ""
 
     def generate_emotional_post(self, topic: str) -> str:
