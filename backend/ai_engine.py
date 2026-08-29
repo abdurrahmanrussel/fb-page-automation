@@ -36,11 +36,32 @@ OLLAMA_VISION_MODELS = ["gemma4:31b", "qwen3.5:397b"]  # gpt-oss/deepseek don't 
 OLLAMA_URL = "https://ollama.com/v1/chat/completions"
 WHISPER_MODEL = "whisper-large-v3-turbo"
 
-_SKIP_INSTRUCTION = (
-    "\n\nবিশেষ নিয়ম: যদি এই মেসেজ/কমেন্টে কোনো প্রকৃত প্রশ্ন, অনুরোধ, বা আলোচনার মতো "
-    'বিষয় না থাকে — শুধু "ok", "thanks", "ধন্যবাদ", "হ্যাঁ"/"আচ্ছা", ইমোজি/স্টিকার, বা এই '
-    "ধরনের নিছক স্বীকৃতি হয় যার জবাব দেওয়ার দরকার নেই — তাহলে অন্য কিছু না লিখে ঠিক এইটুকু "
-    "লিখবে: NO_REPLY_NEEDED"
+
+# Inbox: conversational back-and-forth is normal here, so a customer's "ok"/
+# "thanks" after we already answered genuinely needs no further reply.
+_SKIP_INSTRUCTION_INBOX = (
+    "\n\nবিশেষ নিয়ম: যদি এই মেসেজে কোনো প্রকৃত প্রশ্ন, অনুরোধ, বা আলোচনার মতো বিষয় "
+    'না থাকে — শুধু "ok", "thanks", "ধন্যবাদ", "হ্যাঁ"/"আচ্ছা", ইমোজি/স্টিকার, বা এই '
+    "ধরনের নিছক স্বীকৃতি হয় যার জবাব দেওয়ার দরকার নেই (যেমন আমাদের আগের রিপ্লাইয়ের "
+    "উত্তরে শুধু স্বীকৃতি) — তাহলে অন্য কিছু না লিখে ঠিক এইটুকু লিখবে: NO_REPLY_NEEDED"
+)
+
+# Applied to every generated message via _chat() — the model has swapped in
+# ₹ (rupee) and even "dollar" in testing despite the prompt already using ৳.
+_CURRENCY_GUARD = (
+    "\n\nটাকার প্রতীক হিসেবে সবসময় ৳ ব্যবহার করবে — ₹ (রুপি), $ (ডলার), বা অন্য কোনো "
+    "কারেন্সি চিহ্ন/নাম ব্যবহার করবে না। এটা বাংলাদেশের ব্যবসা।"
+)
+
+# Comments: usually a fresh reaction to the post, not a reply-to-our-reply —
+# so a compliment ("ভালো লাগলো", "সুন্দর") still deserves a short warm thanks.
+# Only skip when there's genuinely nothing to respond to.
+_SKIP_INSTRUCTION_COMMENT = (
+    "\n\nবিশেষ নিয়ম: এই কমেন্টে যদি সত্যিই কিছু না থাকে — শুধু ইমোজি/স্টিকার, কাউকে "
+    "ট্যাগ করা ছাড়া আর কিছু নেই, বা স্প্যাম/সম্পূর্ণ অপ্রাসঙ্গিক — তাহলে অন্য কিছু না "
+    "লিখে ঠিক এইটুকু লিখবে: NO_REPLY_NEEDED। কিন্তু প্রশংসামূলক/ভালো লাগার কমেন্টে "
+    '(যেমন "ভালো লাগলো", "সুন্দর পোস্ট") ছোট্ট একটা উষ্ণ ধন্যবাদসূচক রিপ্লাই দিও — '
+    "এগুলো স্কিপ করবে না।"
 )
 
 
@@ -98,6 +119,11 @@ class TenantAI:
         ]
 
     def _chat(self, messages: list, max_tokens: int, temperature: float) -> str:
+        if messages and messages[0].get("role") == "system":
+            messages = [
+                {**messages[0], "content": messages[0]["content"] + _CURRENCY_GUARD},
+                *messages[1:],
+            ]
         if OLLAMA_API_KEY:
             try:
                 return _strip_markdown(_ollama_chat(messages, max_tokens, temperature))
@@ -152,7 +178,7 @@ class TenantAI:
 
     def generate_comment_reply(self, comment_text: str, post_text: str = "", extra_context: str = "") -> str:
         context = f'পোস্ট: "{post_text[:150]}"\n' if post_text else ""
-        system = self.tenant.comment_prompt + _SKIP_INSTRUCTION
+        system = self.tenant.comment_prompt + _SKIP_INSTRUCTION_COMMENT
         if extra_context:
             system = f"{system}\n\n{extra_context}"
         try:
@@ -169,7 +195,7 @@ class TenantAI:
             return self.tenant.comment_fallback
 
     def generate_inbox_reply(self, user_message: str, history: list = None, extra_context: str = "") -> str:
-        system = self.tenant.base_prompt + _SKIP_INSTRUCTION
+        system = self.tenant.base_prompt + _SKIP_INSTRUCTION_INBOX
         if extra_context:
             system = f"{system}\n\n{extra_context}"
         messages = [{"role": "system", "content": system}]
