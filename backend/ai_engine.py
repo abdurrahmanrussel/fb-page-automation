@@ -13,7 +13,15 @@ import threading
 import time
 
 import requests
+from dotenv import load_dotenv
 from groq import Groq
+
+# Self-sufficient: don't rely on some other module (tenant.py) happening to
+# call load_dotenv() before this module is imported and its module-level
+# OLLAMA_API_KEY constant gets read. Import order previously meant this was
+# always "" in production (bot.py -> ai_engine.py runs before tenant.py's
+# load_dotenv()), so Ollama was silently never actually used.
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 

@@ -18,7 +18,7 @@ auto_posts:
   - "16:30"
 
 ai:
-  model: llama-3.3-70b-versatile
+  model: openai/gpt-oss-120b
   comment_max_tokens: 200
   inbox_max_tokens: 500
   temperature: 0.7

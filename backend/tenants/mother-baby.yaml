@@ -22,7 +22,7 @@ post_topics:
   - "মায়ের প্রসব-পরবর্তী স্বাস্থ্য পুনরুদ্ধার"
 
 ai:
-  model: llama-3.3-70b-versatile
+  model: openai/gpt-oss-120b
   comment_max_tokens: 200
   inbox_max_tokens: 500
   temperature: 0.7

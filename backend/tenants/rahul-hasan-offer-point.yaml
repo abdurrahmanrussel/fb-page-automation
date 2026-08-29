@@ -72,7 +72,7 @@ post_plan:
 
 
 ai:
-  model: llama-3.3-70b-versatile
+  model: openai/gpt-oss-120b
   comment_max_tokens: 1000
   inbox_max_tokens: 2000
   temperature: 0.7
