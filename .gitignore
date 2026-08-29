@@ -20,6 +20,7 @@ venv/
 *.egg-info/
 bot.log
 bot.pid
+backend/data/
 
 # ── Environment / Secrets ────────────────────────────
 .env

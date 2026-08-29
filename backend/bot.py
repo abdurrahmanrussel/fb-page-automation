@@ -16,9 +16,12 @@ from datetime import datetime, timezone, timedelta
 
 import requests
 
+import memory
 from ai_engine import TenantAI
 from pricing import fetch_pricing, format_pricing_context
 from tenant import Tenant
+
+memory.init_db()
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +72,11 @@ class TenantBot:
         self._posted_today: set = set()
         self._last_post_date = None
 
-        # Reply tracking (in-memory, resets on restart)
-        self.replied_comments: set = set()
-        self.replied_messages: set = set()
+        # Reply tracking — preloaded from sqlite so a restart mid-conversation
+        # can't cause a double-reply (previously in-memory only, reset on
+        # every restart, relying solely on the startup backlog-seed pass).
+        self.replied_comments: set = memory.load_replied_ids(self.slug, "comment")
+        self.replied_messages: set = memory.load_replied_ids(self.slug, "message")
 
         self._stop = False
 
@@ -136,6 +141,7 @@ class TenantBot:
                 if cid in self.replied_comments:
                     continue
                 self.replied_comments.add(cid)
+                memory.mark_replied(self.slug, "comment", cid)
                 if reply:
                     post_text = post.get("message") or post.get("story") or ""
                     comment_text = comment.get("message", "")
@@ -213,6 +219,7 @@ class TenantBot:
                     sender_id = msg.get("from", {}).get("id", "")
                     if mid and sender_id != self.t.page_id:
                         self.replied_messages.add(mid)
+                        memory.mark_replied(self.slug, "message", mid)
             return
 
         candidates = []
@@ -249,6 +256,7 @@ class TenantBot:
         mid = latest_user_msg["id"]
         sender_id = latest_user_msg.get("from", {}).get("id", "")
         self.replied_messages.add(mid)
+        memory.mark_replied(self.slug, "message", mid)
 
         user_text = latest_user_msg.get("message", "")
         attachments = latest_user_msg.get("attachments", {}).get("data", [])
@@ -314,16 +322,30 @@ class TenantBot:
             if m.get("message"):
                 history.append({"role": role, "content": m["message"]})
 
+        # Facebook's own thread window (limit 10, sliced further to last 4 in
+        # ai_engine) drops older context fast — a customer who asked about GP
+        # pricing two days ago and sends one short message today may get a
+        # window containing only that one message. The durable sqlite log
+        # doesn't have that limit, so prefer it once it has caught up (it
+        # will, after this exchange saves below); fall back to the raw FB
+        # parse for a customer's very first exchange, before anything's
+        # logged yet.
+        db_history = memory.get_recent_history(self.slug, sender_id, limit=8)
+        if len(db_history) >= len(history):
+            history = db_history
+
         pricing_ctx = (
             format_pricing_context(self.t.pricing_sheet_url)
             if self.t.pricing_sheet_url
             else ""
         )
+        memory.save_message(self.slug, sender_id, "user", user_text)
         ai_reply = self.ai.generate_inbox_reply(user_text, history, pricing_ctx)
         if ai_reply.strip() == "NO_REPLY_NEEDED":
             self._log("info", "Skipping message from %s — no reply needed", sender_id)
             return
         self._send_message(sender_id, ai_reply)
+        memory.save_message(self.slug, sender_id, "assistant", ai_reply)
 
     # ── Scheduled daily posts ──────────────────────────────────────────────────
 
