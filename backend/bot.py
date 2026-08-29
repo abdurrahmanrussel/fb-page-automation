@@ -8,6 +8,7 @@ hosting can serve many pages.
 """
 from __future__ import annotations
 
+import base64
 import logging
 import re
 import time
@@ -144,10 +145,23 @@ class TenantBot:
                         else ""
                     )
                     ai_reply = self.ai.generate_comment_reply(comment_text, post_text, pricing_ctx)
+                    if ai_reply.strip() == "NO_REPLY_NEEDED":
+                        self._log("info", "Skipping comment %s — no reply needed", cid)
+                        continue
                     full_reply = ai_reply + self.t.comment_suffix
                     self._reply_to_comment(cid, full_reply)
 
     # ── Messenger polling ──────────────────────────────────────────────────────
+
+    def _download_attachment(self, url: str) -> bytes | None:
+        try:
+            resp = requests.get(url, timeout=20)
+            if resp.ok:
+                return resp.content
+            self._log("warning", "Attachment download failed (%s): %s", resp.status_code, url[:80])
+        except Exception as e:
+            self._log("warning", "Attachment download error: %s", e)
+        return None
 
     def _send_message(self, recipient_id, message):
         resp = requests.post(
@@ -238,16 +252,54 @@ class TenantBot:
 
         user_text = latest_user_msg.get("message", "")
         attachments = latest_user_msg.get("attachments", {}).get("data", [])
-        attach_types = {a.get("type", "") for a in attachments}
 
-        # Voice → ask for text
-        if "audio" in attach_types:
-            self._send_message(sender_id, self.t.voice_message_reply)
-            return
+        # Facebook returns "mime_type" (e.g. "image/jpeg", "audio/mp4"), not a
+        # "type" field — classify off that instead.
+        image_att = None
+        audio_att = None
+        for a in attachments:
+            mime = a.get("mime_type", "")
+            if mime.startswith("image/") and image_att is None:
+                image_att = a
+            elif (mime.startswith("audio/") or mime.startswith("video/")) and audio_att is None:
+                audio_att = a
 
-        # Image only → ignore
-        if "image" in attach_types and not user_text:
-            return
+        if audio_att:
+            url = (
+                audio_att.get("video_data", {}).get("url")
+                or audio_att.get("image_data", {}).get("url")
+                or audio_att.get("file_url")
+            )
+            audio_bytes = self._download_attachment(url) if url else None
+            transcribed = self.ai.transcribe_audio(audio_bytes) if audio_bytes else ""
+            if transcribed:
+                self._log("info", "Transcribed voice message: %.60s...", transcribed)
+                user_text = transcribed
+            else:
+                self._send_message(sender_id, self.t.voice_message_reply)
+                return
+
+        if image_att:
+            url = image_att.get("image_data", {}).get("url")
+            img_bytes = self._download_attachment(url) if url else None
+            description = ""
+            if img_bytes:
+                b64 = base64.b64encode(img_bytes).decode()
+                mime = image_att.get("mime_type", "image/jpeg")
+                description = self.ai.describe_image(
+                    b64,
+                    mime,
+                    "এটা একজন গ্রাহকের পাঠানো ছবি, কাস্টমার সার্ভিস কনভারসেশনে। ছবিতে কী "
+                    "আছে সংক্ষেপে বাংলায় বর্ণনা করো (যেমন: পেমেন্ট/লেনদেনের স্ক্রিনশট, "
+                    "প্রোডাক্টের ছবি, কোনো সমস্যার ছবি, স্ক্রিনশট, ইত্যাদি)।",
+                )
+            if description:
+                if user_text:
+                    user_text = f"{user_text}\n[সাথে পাঠানো ছবিতে যা আছে: {description}]"
+                else:
+                    user_text = f"[গ্রাহক শুধু একটা ছবি পাঠিয়েছেন। ছবিতে যা আছে: {description}]"
+            elif not user_text:
+                return  # couldn't describe and no text either — nothing to reply to
 
         # Pricing/list request → raw canned response (no AI, no hallucination)
         if self.t.is_list_request(user_text):
@@ -268,6 +320,9 @@ class TenantBot:
             else ""
         )
         ai_reply = self.ai.generate_inbox_reply(user_text, history, pricing_ctx)
+        if ai_reply.strip() == "NO_REPLY_NEEDED":
+            self._log("info", "Skipping message from %s — no reply needed", sender_id)
+            return
         self._send_message(sender_id, ai_reply)
 
     # ── Scheduled daily posts ──────────────────────────────────────────────────

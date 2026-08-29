@@ -32,7 +32,16 @@ def _strip_markdown(text: str) -> str:
 
 OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "")
 OLLAMA_MODELS = ["gpt-oss:120b", "gpt-oss:20b", "deepseek-v4-flash:0731"]
+OLLAMA_VISION_MODELS = ["gemma4:31b", "qwen3.5:397b"]  # gpt-oss/deepseek don't accept images
 OLLAMA_URL = "https://ollama.com/v1/chat/completions"
+WHISPER_MODEL = "whisper-large-v3-turbo"
+
+_SKIP_INSTRUCTION = (
+    "\n\nবিশেষ নিয়ম: যদি এই মেসেজ/কমেন্টে কোনো প্রকৃত প্রশ্ন, অনুরোধ, বা আলোচনার মতো "
+    'বিষয় না থাকে — শুধু "ok", "thanks", "ধন্যবাদ", "হ্যাঁ"/"আচ্ছা", ইমোজি/স্টিকার, বা এই '
+    "ধরনের নিছক স্বীকৃতি হয় যার জবাব দেওয়ার দরকার নেই — তাহলে অন্য কিছু না লিখে ঠিক এইটুকু "
+    "লিখবে: NO_REPLY_NEEDED"
+)
 
 
 def _ollama_chat_one(model: str, messages: list, max_tokens: int, temperature: float) -> str:
@@ -143,7 +152,7 @@ class TenantAI:
 
     def generate_comment_reply(self, comment_text: str, post_text: str = "", extra_context: str = "") -> str:
         context = f'পোস্ট: "{post_text[:150]}"\n' if post_text else ""
-        system = self.tenant.comment_prompt
+        system = self.tenant.comment_prompt + _SKIP_INSTRUCTION
         if extra_context:
             system = f"{system}\n\n{extra_context}"
         try:
@@ -160,7 +169,7 @@ class TenantAI:
             return self.tenant.comment_fallback
 
     def generate_inbox_reply(self, user_message: str, history: list = None, extra_context: str = "") -> str:
-        system = self.tenant.base_prompt
+        system = self.tenant.base_prompt + _SKIP_INSTRUCTION
         if extra_context:
             system = f"{system}\n\n{extra_context}"
         messages = [{"role": "system", "content": system}]
@@ -246,3 +255,57 @@ class TenantAI:
         except Exception as e:
             logger.error("[%s] AI emotional post failed: %s", self.tenant.slug, e)
             return ""
+
+    # ── Audio / image understanding ─────────────────────────────────────────────
+
+    def transcribe_audio(self, audio_bytes: bytes, filename: str = "voice.ogg") -> str:
+        """Speech-to-text via Groq Whisper. Returns "" on any failure."""
+        if not self._clients:
+            return ""
+        client = self._clients[0][0]
+        try:
+            resp = client.audio.transcriptions.create(
+                file=(filename, audio_bytes),
+                model=WHISPER_MODEL,
+            )
+            return (resp.text or "").strip()
+        except Exception as e:
+            logger.error("[%s] Audio transcription failed: %s", self.tenant.slug, e)
+            return ""
+
+    def describe_image(self, image_b64: str, mime_type: str, prompt: str) -> str:
+        """Vision via Ollama Cloud (gpt-oss/deepseek don't accept images, so a
+        separate model list). Returns "" if unavailable or all models fail."""
+        if not OLLAMA_API_KEY:
+            return ""
+        for model in OLLAMA_VISION_MODELS:
+            try:
+                resp = requests.post(
+                    OLLAMA_URL,
+                    headers={"Authorization": f"Bearer {OLLAMA_API_KEY}"},
+                    json={
+                        "model": model,
+                        "reasoning_effort": "low",
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {"type": "text", "text": prompt},
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {"url": f"data:{mime_type};base64,{image_b64}"},
+                                    },
+                                ],
+                            }
+                        ],
+                        "max_tokens": 1000,
+                    },
+                    timeout=30,
+                )
+                resp.raise_for_status()
+                content = resp.json()["choices"][0]["message"]["content"].strip()
+                if content:
+                    return content
+            except Exception as e:
+                logger.warning("Image description failed on %s: %s", model, e)
+        return ""
