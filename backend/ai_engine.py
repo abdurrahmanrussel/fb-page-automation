@@ -38,6 +38,26 @@ def _strip_markdown(text: str) -> str:
     text = text.replace("`", "")
     return text
 
+# Universal anti-AI-tell guard, injected into every system prompt via _chat().
+# Root cause found live-testing: prompts with a literal quotable example line
+# ("চেনা গল্প, তাই না?" etc.) get copied back near-verbatim, and models default
+# to ellipsis-drama, listicle formatting, and over-precise fake quantities
+# even without such an example. Fixing per-yaml doesn't scale (7 tenants, N
+# prompts each) — one choke point covers all of them.
+_HUMAN_VOICE_GUARD = (
+    "\n\nলেখার স্টাইল — সত্যিকারের মানুষ যেভাবে ফোনে টাইপ করে সেভাবে লেখো, কোনো "
+    "কপিরাইটিং টেমপ্লেটের মতো লাগবে না। নিচেরগুলো এড়িয়ে চলো:\n"
+    "১. প্রম্পটে দেওয়া কোনো উদাহরণ বাক্য/লাইন হুবহু কপি করা — উদাহরণ শুধু ধারণা দেওয়ার "
+    "জন্য, প্রতিবার নিজের ভাষায় ভিন্নভাবে লিখবে।\n"
+    "২. নাটকীয়তার জন্য বারবার '...' (তিন ডট) ব্যবহার করা।\n"
+    "৩. সাধারণ পোস্ট/কমেন্টে নাম্বারড লিস্ট বা বুলেট পয়েন্ট — যদি না সেটা সত্যিই ধাপে "
+    "ধাপে করার তালিকা।\n"
+    "৪. অতিরিক্ত নির্দিষ্ট সংখ্যা/পরিমাণ যা কৃত্রিম শোনায় (যেমন 'ছয়টি বাদাম' — এর বদলে "
+    "সহজভাবে 'কিছু বাদাম' বলো)।\n"
+    "৫. যুক্তিহীন বা অসংলগ্ন দৃশ্য/গল্প বানানো — দৃশ্যটা বাস্তবসম্মত ও কার্যকারণসম্পর্কযুক্ত হতে হবে।\n"
+    "৬. একই বাগধারা/রূপক/ট্রানজিশন লাইন বারবার পুনরাবৃত্তি করা।"
+)
+
 OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "")
 OLLAMA_MODELS = ["gpt-oss:120b", "gpt-oss:20b", "deepseek-v4-flash:0731"]
 OLLAMA_VISION_MODELS = ["gemma4:31b", "qwen3.5:397b"]  # gpt-oss/deepseek don't accept images
@@ -129,7 +149,10 @@ class TenantAI:
     def _chat(self, messages: list, max_tokens: int, temperature: float) -> str:
         if messages and messages[0].get("role") == "system":
             messages = [
-                {**messages[0], "content": messages[0]["content"] + _CURRENCY_GUARD},
+                {
+                    **messages[0],
+                    "content": messages[0]["content"] + _CURRENCY_GUARD + _HUMAN_VOICE_GUARD,
+                },
                 *messages[1:],
             ]
         if OLLAMA_API_KEY:
@@ -270,7 +293,7 @@ class TenantAI:
                     {"role": "user", "content": f"আজকের গল্পের বিষয়/ইঙ্গিত: {topic}"},
                 ],
                 max_tokens=700,
-                temperature=0.9,
+                temperature=0.8,
             )
         except Exception as e:
             logger.error("[%s] AI story post failed: %s", self.tenant.slug, e)
